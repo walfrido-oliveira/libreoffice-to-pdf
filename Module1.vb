@@ -1,10 +1,13 @@
-﻿Imports unoidl.com.sun.star.lang
+Imports unoidl.com.sun.star.lang
 Imports unoidl.com.sun.star.util
 Imports System.IO
 Imports System.Environment
 Imports unoidl.com.sun.star.uno
 Imports uno.util
 Imports unoidl.com.sun.star.frame
+Imports unoidl.com.sun.star.sheet
+Imports unoidl.com.sun.star.beans
+Imports unoidl.com.sun.star.container
 
 Module Module1
 
@@ -83,7 +86,7 @@ Module Module1
             loader = CType(xRemoteFactory.createInstance("com.sun.star.frame.Desktop"), XComponentLoader)
             Return loader
         Catch ex As Exception
-            Console.Write(ex.Message)
+            Console.Write(ex.StackTrace)
         End Try
         Return Nothing
     End Function
@@ -96,8 +99,9 @@ Module Module1
                 Console.Write(String.Format("Can't find input file {0}", from))
                 Exit Sub
             End If
-            Dim pv = New unoidl.com.sun.star.beans.PropertyValue(0) {}
-            pv(0) = New unoidl.com.sun.star.beans.PropertyValue With
+
+            Dim pv = New PropertyValue(2) {}
+            pv(0) = New PropertyValue With
             {
                 .Name = "Hidden",
                 .Value = New uno.Any(True)
@@ -112,9 +116,25 @@ Module Module1
                     xComponent = Loader.loadComponentFromURL("file:///" & from.Replace("\"c, "/"c), "_blank", 0, pv)
                 End Try
 
+
+
+                Dim doc = CType(xComponent, XSpreadsheetDocument)
+                Dim ox As XSpreadsheets = CType(doc.getSheets(), XSpreadsheets)
+                Dim oxx As XIndexAccess = CType(ox, XIndexAccess)
+                Dim oXlsSheet As XSpreadsheet = CType(oxx.getByIndex(1).Value, XSpreadsheet)
+
+                'doc.getSheets().moveByName("certificado", CType(0, Short))
+                Dim oPrintArea = CType(oXlsSheet, XPrintAreas).getPrintAreas
+                Dim oRange = oXlsSheet.getCellRangeByPosition(oPrintArea(0).StartColumn,
+                                                              oPrintArea(0).StartRow,
+                                                              oPrintArea(0).EndColumn,
+                                                              oPrintArea(0).EndRow)
+
+
+
+
                 Dim xStorable = CType(xComponent, XStorable)
                 pv(0).Name = "FilterName"
-
                 Select Case Path.GetExtension(from).ToLowerInvariant()
                     Case ".xls", ".xlsx", ".ods"
                         pv(0).Value = New uno.Any("calc_pdf_Export")
@@ -122,13 +142,27 @@ Module Module1
                         pv(0).Value = New uno.Any("writer_pdf_Export")
                 End Select
 
+                Dim pv2 = New PropertyValue(0) {}
+                pv2(0) = New PropertyValue With
+                {
+                .Name = "Selection",
+                .Value = New uno.Any(oRange.GetType(), oRange)
+                }
+
+                pv(1) = New PropertyValue With
+                {
+                   .Name = "FilterData",
+                   .Value = New uno.Any(pv2.GetType(), pv2)
+                }
+
+
                 xStorable.storeToURL("file:///" & toPdf.Replace("\"c, "/"c), pv)
                 Dim xClosable = CType(xComponent, XCloseable)
                 xClosable.close(True)
                 If File.Exists(toPdf) Then Process.Start(toPdf)
             End SyncLock
         Catch ex As Exception
-            Console.Write(ex.Message)
+            Console.Write(ex.Message, ex.StackTrace)
         End Try
     End Sub
 
