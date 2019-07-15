@@ -9,7 +9,7 @@ Imports unoidl.com.sun.star.sheet
 Imports unoidl.com.sun.star.beans
 Imports unoidl.com.sun.star.container
 
-Module Module1
+Module Core
 
     Private input As String
     Private output As String
@@ -53,32 +53,27 @@ Module Module1
 
     Private Function InitLoader() As XComponentLoader
         Try
-            Dim confFile = Configuration.ConfigurationManager.OpenExeConfiguration(Configuration.ConfigurationUserLevel.None)
-            Dim setting = confFile.AppSettings.Settings
-            Dim unoPath = Configuration.ConfigurationManager.AppSettings("UNO_PATH").ToString() '"C:\Program Files (x86)\LibreOffice 3.6\program"
-            Dim urePath = Configuration.ConfigurationManager.AppSettings("URE_PATH").ToString() '"C:\Program Files (x86)\LibreOffice 3.6\URE\bin"
+            Dim unoPath = String.Empty
+            Dim urePath = String.Empty
             Dim path As String = String.Empty
 
-            'Utilizado para versoes > 4 onde nao tem a pasta URE
-            'SetEnvironmentVariable("UNO_PATH", unoPath, EnvironmentVariableTarget.Process)
-            'SetEnvironmentVariable("PATH", GetEnvironmentVariable("PATH") + ";" + unoPath, EnvironmentVariableTarget.Process)
-
-            'Utilizado para versos < 4
-
-            'Versões que não existe a pasta 'URE' o PATH ficará na pasta 'program'
-            'Tendo a pasta URE o PATH será a pasta 'URE'
+            If Environment.Is64BitOperatingSystem Then
+                unoPath = Configuration.ConfigurationManager.AppSettings("UNO_PATH").ToString()
+                urePath = Configuration.ConfigurationManager.AppSettings("URE_PATH").ToString()
+            Else
+                unoPath = Configuration.ConfigurationManager.AppSettings("UNO_PATH_86x").ToString()
+                urePath = Configuration.ConfigurationManager.AppSettings("URE_PATH_86x").ToString()
+            End If
 
             If String.IsNullOrEmpty(urePath) Then
-                path = String.Format("{0};{1}", System.Environment.GetEnvironmentVariable("PATH"), unoPath)
+                path = String.Format("{0};{1}", Environment.GetEnvironmentVariable("PATH"), unoPath)
                 Environment.SetEnvironmentVariable("PATH", path)
                 Environment.SetEnvironmentVariable("UNO_PATH", unoPath)
             Else
-                path = String.Format("{0};{1}", System.Environment.GetEnvironmentVariable("PATH"), urePath)
+                path = String.Format("{0};{1}", Environment.GetEnvironmentVariable("PATH"), urePath)
                 Environment.SetEnvironmentVariable("PATH", path)
                 Environment.SetEnvironmentVariable("UNO_PATH", unoPath)
             End If
-
-
 
             Dim loader As XComponentLoader = Nothing
             Dim xLocalContext = Bootstrap.bootstrap()
@@ -116,24 +111,19 @@ Module Module1
                     xComponent = Loader.loadComponentFromURL("file:///" & from.Replace("\"c, "/"c), "_blank", 0, pv)
                 End Try
 
-
-
                 Dim doc = CType(xComponent, XSpreadsheetDocument)
                 Dim ox As XSpreadsheets = CType(doc.getSheets(), XSpreadsheets)
                 Dim oxx As XIndexAccess = CType(ox, XIndexAccess)
                 Dim oXlsSheet As XSpreadsheet = CType(oxx.getByIndex(1).Value, XSpreadsheet)
 
-                'doc.getSheets().moveByName("certificado", CType(0, Short))
-                Dim oPrintArea = CType(oXlsSheet, XPrintAreas).getPrintAreas
+                Dim oPrintArea = CType(oXlsSheet, XPrintAreas).getPrintAreas()
                 Dim oRange = oXlsSheet.getCellRangeByPosition(oPrintArea(0).StartColumn,
                                                               oPrintArea(0).StartRow,
                                                               oPrintArea(0).EndColumn,
                                                               oPrintArea(0).EndRow)
 
-
-
-
                 Dim xStorable = CType(xComponent, XStorable)
+
                 pv(0).Name = "FilterName"
                 Select Case Path.GetExtension(from).ToLowerInvariant()
                     Case ".xls", ".xlsx", ".ods"
@@ -145,8 +135,8 @@ Module Module1
                 Dim pv2 = New PropertyValue(0) {}
                 pv2(0) = New PropertyValue With
                 {
-                .Name = "Selection",
-                .Value = New uno.Any(oRange.GetType(), oRange)
+                    .Name = "Selection",
+                    .Value = New uno.Any(oRange.GetType(), oRange)
                 }
 
                 pv(1) = New PropertyValue With
@@ -154,7 +144,6 @@ Module Module1
                    .Name = "FilterData",
                    .Value = New uno.Any(pv2.GetType(), pv2)
                 }
-
 
                 xStorable.storeToURL("file:///" & toPdf.Replace("\"c, "/"c), pv)
                 Dim xClosable = CType(xComponent, XCloseable)
