@@ -11,5 +11,10 @@ Utilizado para versos < 4
 Versões que não existe a pasta 'URE' o PATH ficará na pasta 'program'
 Tendo a pasta URE o PATH será a pasta 'URE'
 
-Dim unoPath = Configuration.ConfigurationManager.AppSettings("UNO_PATH").ToString() '"C:\Program Files (x86)\LibreOffice 3.6\program"
-Dim urePath = Configuration.ConfigurationManager.AppSettings("URE_PATH").ToString() '"C:\Program Files (x86)\LibreOffice 3.6\URE\bin"
+Dim unoPath = Configuration.ConfigurationManager.AppSettings("UNO_PATH").ToString() 
+
+C:\Program Files (x86)\LibreOffice 3.6\program
+
+Dim urePath = Configuration.ConfigurationManager.AppSettings("URE_PATH").ToString()
+
+C:\Program Files (x86)\LibreOffice 3.6\URE\bin
