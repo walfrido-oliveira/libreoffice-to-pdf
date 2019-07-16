@@ -11,8 +11,8 @@ Imports unoidl.com.sun.star.container
 
 Module Core
 
-    Private input As String
-    Private output As String
+    Private input As String '= "C:\Users\walfr\source\repos\LibreOfficeConvert\LibreOfficeConvert\bin\Debug\LV05340-16398-19-R0.ods"
+    Private output As String '= "C:\Users\walfr\source\repos\LibreOfficeConvert\LibreOfficeConvert\bin\Debug\LV05340-16398-19-R0.ods.pdf"
 
     Sub Main(args As String())
         Try
@@ -54,15 +54,28 @@ Module Core
     Private Function InitLoader() As XComponentLoader
         Try
             Dim unoPath = String.Empty
+            Dim unoPathList = Configuration.ConfigurationManager.AppSettings("UNO_PATH").ToString()
             Dim urePath = String.Empty
+            Dim urePathList = Configuration.ConfigurationManager.AppSettings("URE_PATH").ToString()
             Dim path As String = String.Empty
 
-            If Environment.Is64BitOperatingSystem Then
-                unoPath = Configuration.ConfigurationManager.AppSettings("UNO_PATH").ToString()
-                urePath = Configuration.ConfigurationManager.AppSettings("URE_PATH").ToString()
-            Else
-                unoPath = Configuration.ConfigurationManager.AppSettings("UNO_PATH_86x").ToString()
-                urePath = Configuration.ConfigurationManager.AppSettings("URE_PATH_86x").ToString()
+            For Each item As String In unoPathList.Split(";")
+                If Directory.Exists(item) Then
+                    unoPath = item
+                    Exit For
+                End If
+            Next
+
+            For Each item As String In urePathList.Split(";")
+                If Directory.Exists(item) Then
+                    urePath = item
+                    Exit For
+                End If
+            Next
+
+            If String.IsNullOrWhiteSpace(unoPath) Or String.IsNullOrWhiteSpace(unoPath) Then
+                Console.Write("Pasta LibreOffice não localizada")
+                [Exit](1)
             End If
 
             If String.IsNullOrEmpty(urePath) Then
@@ -115,12 +128,12 @@ Module Core
                 Dim ox As XSpreadsheets = CType(doc.getSheets(), XSpreadsheets)
                 Dim oxx As XIndexAccess = CType(ox, XIndexAccess)
                 Dim oXlsSheet As XSpreadsheet = CType(oxx.getByIndex(1).Value, XSpreadsheet)
-
                 Dim oPrintArea = CType(oXlsSheet, XPrintAreas).getPrintAreas()
-                Dim oRange = oXlsSheet.getCellRangeByPosition(oPrintArea(0).StartColumn,
-                                                              oPrintArea(0).StartRow,
-                                                              oPrintArea(0).EndColumn,
-                                                              oPrintArea(0).EndRow)
+                Dim oRange = Nothing
+                If oPrintArea.Count > 0 Then
+                    oRange = oXlsSheet.getCellRangeByPosition(oPrintArea(0).StartColumn, oPrintArea(0).StartRow,
+                                                              oPrintArea(0).EndColumn, oPrintArea(0).EndRow)
+                End If
 
                 Dim xStorable = CType(xComponent, XStorable)
 
@@ -133,11 +146,13 @@ Module Core
                 End Select
 
                 Dim pv2 = New PropertyValue(0) {}
-                pv2(0) = New PropertyValue With
-                {
-                    .Name = "Selection",
-                    .Value = New uno.Any(oRange.GetType(), oRange)
-                }
+                If oRange IsNot Nothing Then
+                    pv2(0) = New PropertyValue With
+                    {
+                        .Name = "Selection",
+                        .Value = New uno.Any(oRange.GetType(), oRange)
+                    }
+                End If
 
                 pv(1) = New PropertyValue With
                 {
