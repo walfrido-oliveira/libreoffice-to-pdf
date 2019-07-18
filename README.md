@@ -2,19 +2,9 @@
 A tool for converting Calc files in PDF files
 Contact me walfrido_15@hotmail.com
 
-Utilizado para versoes > 4 onde nao tem a pasta URE
-SetEnvironmentVariable("UNO_PATH", unoPath, EnvironmentVariableTarget.Process)
-SetEnvironmentVariable("PATH", GetEnvironmentVariable("PATH") + ";" + unoPath, EnvironmentVariableTarget.Process)
+Used for versions > 4 
+When don't have the folder URE the path will be in the folder 'program'
 
-Utilizado para versos < 4
+Used for versions < 4
+When the folder URE exist then the PATH will be the folder URE
 
-Versões que não existe a pasta 'URE' o PATH ficará na pasta 'program'
-Tendo a pasta URE o PATH será a pasta 'URE'
-
-Dim unoPath = Configuration.ConfigurationManager.AppSettings("UNO_PATH").ToString() 
-
-C:\Program Files (x86)\LibreOffice 3.6\program
-
-Dim urePath = Configuration.ConfigurationManager.AppSettings("URE_PATH").ToString()
-
-C:\Program Files (x86)\LibreOffice 3.6\URE\bin
