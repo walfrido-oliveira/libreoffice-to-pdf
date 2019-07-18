@@ -13,13 +13,27 @@ Module Core
 
     Private input As String '= "C:\Users\walfr\source\repos\LibreOfficeConvert\LibreOfficeConvert\bin\Debug\LV05340-16398-19-R0.ods"
     Private output As String '= "C:\Users\walfr\source\repos\LibreOfficeConvert\LibreOfficeConvert\bin\Debug\LV05340-16398-19-R0.ods.pdf"
+    Private sheetName As String = String.Empty
+    Private sheetIndex As Integer = -1
 
     Sub Main(args As String())
         Try
             If args.Length = 2 Then
                 input = args(0)
                 output = args(1)
+                sheetIndex = 1
                 Convert(input, output)
+            ElseIf args.Length = 3 Then
+                input = args(0)
+                output = args(1)
+                If IsNumeric(args(2)) Then sheetIndex = CInt(args(2)) Else sheetName = args(2)
+                Convert(input, output)
+            ElseIf args(0).ToLower.Equals("help") Then
+                Console.WriteLine("Converte uma planilha Calc para formato PDF.")
+                Console.WriteLine("[...] [...] [...]")
+                Console.WriteLine("origem   Especifica o arquivo a ser convertido.")
+                Console.WriteLine("destino  Especifica o arquivo de saída.")
+                Console.WriteLine("sheet    Especifica qual sheet será convertido (padrão 1).")
             Else
                 Console.Write("Invalid parameter number.")
             End If
@@ -73,7 +87,7 @@ Module Core
                 End If
             Next
 
-            If String.IsNullOrWhiteSpace(unoPath) Or String.IsNullOrWhiteSpace(unoPath) Then
+            If String.IsNullOrWhiteSpace(unoPath) Then
                 Console.Write("Pasta LibreOffice não localizada")
                 [Exit](1)
             End If
@@ -127,7 +141,9 @@ Module Core
                 Dim doc = CType(xComponent, XSpreadsheetDocument)
                 Dim ox As XSpreadsheets = CType(doc.getSheets(), XSpreadsheets)
                 Dim oxx As XIndexAccess = CType(ox, XIndexAccess)
-                Dim oXlsSheet As XSpreadsheet = CType(oxx.getByIndex(1).Value, XSpreadsheet)
+                Dim oXlsSheet As XSpreadsheet = Nothing
+                If sheetIndex > -1 Then oXlsSheet = CType(oxx.getByIndex(sheetIndex).Value, XSpreadsheet)
+                If Not String.IsNullOrEmpty(sheetName) Then oXlsSheet = CType(ox.getByName(sheetName).Value, XSpreadsheet)
                 Dim oPrintArea = CType(oXlsSheet, XPrintAreas).getPrintAreas()
                 Dim oRange = Nothing
                 If oPrintArea.Count > 0 Then
