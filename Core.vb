@@ -13,8 +13,11 @@ Module Core
 
     Private input As String '= "C:\Users\walfr\source\repos\LibreOfficeConvert\LibreOfficeConvert\bin\Debug\LV05340-16398-19-R0.ods"
     Private output As String '= "C:\Users\walfr\source\repos\LibreOfficeConvert\LibreOfficeConvert\bin\Debug\LV05340-16398-19-R0.ods.pdf"
+
     Private sheetName As String = String.Empty
     Private sheetIndex As Integer = -1
+
+    Private Const TAB As String = Constants.vbTab
 
     Sub Main(args As String())
         Try
@@ -29,11 +32,11 @@ Module Core
                 If IsNumeric(args(2)) Then sheetIndex = CInt(args(2)) Else sheetName = args(2)
                 Convert(input, output)
             ElseIf args(0).ToLower.Equals("help") Then
-                Console.WriteLine("Converte uma planilha Calc para formato PDF.")
-                Console.WriteLine("[...] [...] [...]")
-                Console.WriteLine("origem   Especifica o arquivo a ser convertido.")
-                Console.WriteLine("destino  Especifica o arquivo de saída.")
-                Console.WriteLine("sheet    Especifica qual sheet será convertido (padrão 1).")
+                Console.WriteLine("{0}Converte uma planilha Calc para formato PDF.", TAB)
+                Console.WriteLine("{0}{1}[...] [...] [...]", TAB, TAB)
+                Console.WriteLine("{0}origem{1}Especifica o arquivo a ser convertido.", TAB, TAB)
+                Console.WriteLine("{0}destino{1}Especifica o arquivo de saída.", TAB, TAB)
+                Console.WriteLine("{0}sheet{1}Especifica qual sheet será convertido (padrão 1). Nome ou index.", TAB, TAB)
             Else
                 Console.Write("Invalid parameter number.")
             End If
